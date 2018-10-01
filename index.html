@@ -9,13 +9,16 @@
     <title>KKWay</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="qr/qr-scanner.min.js"></script>
 </head>
 
 <body>
 
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="index.html">KKWAY</a>
+        <a class="navbar-brand" href="index.html"><b>KKWAY</b></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
             aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -35,35 +38,52 @@
     <main role="main" class="container">
 
         <div class="main-area">
-            <h1>KKWay</h1>
-            <p class="lead">Have trouble finding your destination? Scan the nearest QR code and find your way there!</p>
-            <input class="form-control form-control-lg" type="text" placeholder="Destination Unit Number">
-        </div>
-
-        <div class="cam-area">
-            <video muted autoplay playsinline id="qr-video"></video>
-            <h2>Detected QR code: <span id="cam-qr-result">None</span></h2>
+            <input class="form-control form-control-lg" type="text" id="input_dest" placeholder="Destination Unit Number">
+            <div class="cam-area">
+                <div>
+                    <video muted autoplay playsinline id="qr-video" class="cam-out"></video>
+                    <h6>Detected QR code: <span id="cam-qr-result">None</span></h6>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#routingModal">Get
+                Route</button>
         </div>
 
     </main>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
+    <div class="modal fade" id="routingModal" tabindex="-1" role="dialog" aria-labelledby="routingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="routingModalLabel"><br>KKWay Route</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <p class="lead"><small>ROUTE</small></p>
+                        <h4 id="route-title">Title</h4>
+                        <img id="img-out" , style="width:98%;"><br>
+                        <div id="steps"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.jQuery || document.write('<script src="js/vendor/jquery-slim.min.js"><\/script>')
     </script>
-    <script src="js/vendor/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
 
     <script type="module">
         import QrScanner from "./qr/qr-scanner.min.js";
         const video = document.getElementById('qr-video');
-        const debugCheckbox = document.getElementById('debug-checkbox');
-        const debugCanvas = document.getElementById('debug-canvas');
-        const debugCanvasContext = debugCanvas.getContext('2d');
         const camQrResult = document.getElementById('cam-qr-result');
-        const fileSelector = document.getElementById('file-selector');
-        const fileQrResult = document.getElementById('file-qr-result');
 
         function setResult(label, result) {
             label.textContent = result;
@@ -72,57 +92,57 @@
             label.highlightTimeout = setTimeout(() => label.style.color = 'inherit', 100);
         }
 
-
-        // ####### Web Cam Scanning #######
-
-        const scanner = new QrScanner(video, result => setResult(camQrResult, result), 240);
-        scanner.start();
-
-
-        // ####### File Scanning #######
-
-        fileSelector.addEventListener('change', event => {
-            const file = fileSelector.files[0];
-            if (!file) {
-                return;
+        function makeUL(array) {
+            var list = document.createElement('ol');
+            for (var i = 0; i < array.length; i++) {
+                // Create the list item:
+                var item = document.createElement('li');
+                // Set its contents:
+                item.appendChild(document.createTextNode(array[i]));
+                // Add it to the list:
+                list.appendChild(item);
             }
-            QrScanner.scanImage(file)
-                .then(result => setResult(fileQrResult, result))
-                .catch(e => setResult(fileQrResult, e || 'No QR code found.'));
-        });
-
-
-        // ####### debug mode related code #######
-
-        debugCheckbox.addEventListener('change', () => setDebugMode(debugCheckbox.checked));
-
-        function setDebugMode(isDebug) {
-            const worker = scanner._qrWorker;
-            worker.postMessage({
-                type: 'setDebug',
-                data: isDebug
-            });
-            if (isDebug) {
-                debugCanvas.style.display = 'block';
-                worker.addEventListener('message', handleDebugImage);
-            } else {
-                debugCanvas.style.display = 'none';
-                worker.removeEventListener('message', handleDebugImage);
-            }
+            return list;
         }
 
-        function handleDebugImage(event) {
-            const type = event.data.type;
-            if (type === 'debugImage') {
-                const imageData = event.data.data;
-                if (debugCanvas.width !== imageData.width || debugCanvas.height !== imageData.height) {
-                    debugCanvas.width = imageData.width;
-                    debugCanvas.height = imageData.height;
+        const scanner = new QrScanner(video, result => setResult(camQrResult, result));
+
+        $('#routingModal').on('shown.bs.modal', function (e) {
+            var camQrResult = document.getElementById('cam-qr-result');
+            var route_title = document.getElementById('route-title');
+            var input_dest = document.getElementById("input_dest").value;
+            var img_out = document.getElementById("img-out");
+            var qr_code = camQrResult.innerText;
+            var output_steps = document.getElementById("steps");
+
+            //debug
+            //qr_code = "1.2corner3";
+            //input_dest = "2.2corner4";
+
+            route_title.innerText = "From: " + qr_code + " to " + input_dest;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', "https://dev.team-lol.tk/directions?start_loc="+qr_code+"&end_loc="+input_dest, true);
+            xhr.onload = function () {
+                var json = JSON.parse(this.responseText);
+                console.log(json.error);
+                var direction_list = json.direction;
+                var rendered = json.map_render;
+                rendered = rendered.substring(2, rendered.length-1);
+                try {
+                    output_steps.removeChild(output_steps.childNodes[0]);
+                } catch(err) {
+                    console.log(err);
+                } finally {
+                    output_steps.appendChild(makeUL(direction_list));
                 }
-                debugCanvasContext.putImageData(imageData, 0, 0);
-            }
-        }
+                $("#img-out").attr("src", "data:image/png;base64,"+rendered);
+            };
+            xhr.send();
+        })
+        scanner.start();
     </script>
+
 </body>
 
 </html>
