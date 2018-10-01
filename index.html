@@ -4,8 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>KKWay</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet">
@@ -33,7 +32,6 @@
     </nav>
 
     <main role="main" class="container">
-
         <div class="main-area">
             <input class="form-control form-control-lg" type="text" id="input_dest" placeholder="Destination Unit Number">
             <div class="cam-area">
@@ -45,7 +43,6 @@
             <button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#routingModal">Get
                 Route</button>
         </div>
-
     </main>
 
     <div class="modal fade" id="routingModal" tabindex="-1" role="dialog" aria-labelledby="routingModalLabel"
@@ -53,7 +50,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="routingModalLabel"><br>KKWay Route</h5>
+                    <h5 class="modal-title" id="routingModalLabel">KKWay Route</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -92,11 +89,8 @@
         function makeUL(array) {
             var list = document.createElement('ol');
             for (var i = 0; i < array.length; i++) {
-                // Create the list item:
                 var item = document.createElement('li');
-                // Set its contents:
                 item.appendChild(document.createTextNode(array[i]));
-                // Add it to the list:
                 list.appendChild(item);
             }
             return list;
@@ -112,28 +106,28 @@
             var qr_code = camQrResult.innerText;
             var output_steps = document.getElementById("steps");
 
-            //debug
-            //qr_code = "1.2corner3";
-            //input_dest = "2.2corner4";
-
             route_title.innerText = "From: " + qr_code + " to " + input_dest;
 
             var xhr = new XMLHttpRequest();
             xhr.open('POST', "https://endpoint.kkway.tk/directions?start_loc="+qr_code+"&end_loc="+input_dest, true);
             xhr.onload = function () {
                 var json = JSON.parse(this.responseText);
-                console.log(json.error);
-                var direction_list = json.direction;
-                var rendered = json.map_render;
-                rendered = rendered.substring(2, rendered.length-1);
-                try {
-                    output_steps.removeChild(output_steps.childNodes[0]);
-                } catch(err) {
-                    console.log(err);
-                } finally {
-                    output_steps.appendChild(makeUL(direction_list));
+                if (json.error === "" ){
+                    var direction_list = json.direction;
+                    var rendered = json.map_render;
+                    rendered = rendered.substring(2, rendered.length-1);
+                    try {
+                        output_steps.removeChild(output_steps.childNodes[0]);
+                    } catch(err) {
+                        console.log(err);
+                    } finally {
+                        output_steps.appendChild(makeUL(direction_list));
+                    }
+                    $("#img-out").attr("src", "data:image/png;base64,"+rendered);
+                } else {
+                    console.log(json.error);
+                    output_steps.appendChild(json.error);
                 }
-                $("#img-out").attr("src", "data:image/png;base64,"+rendered);
             };
             xhr.send();
         })
