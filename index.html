@@ -38,7 +38,10 @@
             <h1>KKWay</h1>
             <p class="lead">Have trouble finding your destination? Scan the nearest QR code and find your way there!</p>
             <input class="form-control form-control-lg" type="text" placeholder="Destination Unit Number">
+        </div>
 
+        <div class="cam-area">
+            <h1>Scan from WebCam:</h1>
             <div>
                 <video muted autoplay playsinline id="qr-video"></video>
                 <canvas id="debug-canvas"></canvas>
@@ -49,7 +52,7 @@
             </div>
             <b>Detected QR code: </b>
             <span id="cam-qr-result">None</span>
-
+            <hr>
         </div>
 
     </main>
@@ -71,16 +74,23 @@
         const camQrResult = document.getElementById('cam-qr-result');
         const fileSelector = document.getElementById('file-selector');
         const fileQrResult = document.getElementById('file-qr-result');
+
         function setResult(label, result) {
             label.textContent = result;
             label.style.color = 'teal';
             clearTimeout(label.highlightTimeout);
             label.highlightTimeout = setTimeout(() => label.style.color = 'inherit', 100);
         }
+
+
         // ####### Web Cam Scanning #######
+
         const scanner = new QrScanner(video, result => setResult(camQrResult, result));
         scanner.start();
+
+
         // ####### File Scanning #######
+
         fileSelector.addEventListener('change', event => {
             const file = fileSelector.files[0];
             if (!file) {
@@ -90,8 +100,12 @@
                 .then(result => setResult(fileQrResult, result))
                 .catch(e => setResult(fileQrResult, e || 'No QR code found.'));
         });
+
+
         // ####### debug mode related code #######
+
         debugCheckbox.addEventListener('change', () => setDebugMode(debugCheckbox.checked));
+
         function setDebugMode(isDebug) {
             const worker = scanner._qrWorker;
             worker.postMessage({
@@ -106,6 +120,7 @@
                 worker.removeEventListener('message', handleDebugImage);
             }
         }
+
         function handleDebugImage(event) {
             const type = event.data.type;
             if (type === 'debugImage') {
