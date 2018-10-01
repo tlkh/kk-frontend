@@ -41,18 +41,8 @@
         </div>
 
         <div class="cam-area">
-            <h1>Scan from WebCam:</h1>
-            <div>
-                <video muted autoplay playsinline id="qr-video"></video>
-                <canvas id="debug-canvas"></canvas>
-            </div>
-            <div>
-                <input type="checkbox" id="debug-checkbox">
-                <span>Show debug image</span>
-            </div>
-            <b>Detected QR code: </b>
-            <span id="cam-qr-result">None</span>
-            <hr>
+            <video muted autoplay playsinline id="qr-video"></video>
+            <h2>Detected QR code: <span id="cam-qr-result">None</span></h2>
         </div>
 
     </main>
@@ -85,7 +75,7 @@
 
         // ####### Web Cam Scanning #######
 
-        const scanner = new QrScanner(video, result => setResult(camQrResult, result));
+        const scanner = new QrScanner(video, result => setResult(camQrResult, result), 240);
         scanner.start();
 
 
