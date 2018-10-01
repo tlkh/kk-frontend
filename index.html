@@ -119,7 +119,7 @@
             route_title.innerText = "From: " + qr_code + " to " + input_dest;
 
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', "https://api.kkway.tk/directions?start_loc="+qr_code+"&end_loc="+input_dest, true);
+            xhr.open('POST', "https://endpoint.kkway.tk/directions?start_loc="+qr_code+"&end_loc="+input_dest, true);
             xhr.onload = function () {
                 var json = JSON.parse(this.responseText);
                 console.log(json.error);
